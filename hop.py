@@ -1,11 +1,15 @@
  # -*- coding: utf-8 -*-
 import numpy as np
-# from numpy import linalg as la
+import random
+import copy
 
 data_num = 6
-use_num = 2
+use_num = 6
+data_size = 25
+noise_percent = 0.1
 
-train_data = np.array(
+answer = np.array(["A","C","E","H","I","X"])
+raw_data = np.array(
         # A
         [[-1,-1,1,-1,-1,
          -1,1,-1,1,-1,
@@ -17,19 +21,13 @@ train_data = np.array(
          1,-1,-1,-1,1,
          1,-1,-1,-1,-1,
          1,-1,-1,-1,1,
-         -1,1,1,1,-1],
+         -1,1,1,1,-1],  
         # E
         [1,1,1,1,1,
          1,-1,-1,-1,-1,
          1,1,1,1,-1,
          1,-1,-1,-1,-1,
          1,1,1,1,1],
-        # G
-        [-1,1,1,1,-1,
-         1,-1,-1,-1,-1,
-         1,-1,1,1,1,
-         1,-1,-1,-1,1,
-         -1,1,1,1,1],
         # H
         [1,-1,-1,-1,1,
          1,-1,-1,-1,1,
@@ -41,36 +39,85 @@ train_data = np.array(
          -1,-1,1,-1,-1,
          -1,-1,1,-1,-1,
          -1,-1,1,-1,-1,
-         -1,1,1,1,-1]])
+         -1,1,1,1,-1],
+        # X
+        [1,-1,-1,-1,1,
+         -1,1,-1,1,-1,
+         -1,-1,1,-1,-1,
+         -1,1,-1,1,-1,
+         1,-1,-1,-1,1]])
+data = raw_data.reshape((data_num,data_size,1))
 
 
 def print_dot(data):
-    for i in range(5):
-        for j in range(5):
-            if data[i][j] == 1:
-                print "*",
-            else:
-                print " ",
-        print ""
-    print ""
+    for i in range(data_size):
+        if data[i] == 1:
+            print "*",
+        else:
+            print " ",
+        if i%5 == 4:
+            print ""
 
-
-def calculate_w(main_data):
-    W = np.zeros((25,25))
-    w_data = train_data.reshape((data_num,25,1))
+def calculate_w():
+    global W
+    W = np.zeros((data_size,data_size))
     for i in range(use_num):
-        W = W + w_data[i].dot(w_data[i].transpose())
+        W = W + data[i].dot(data[i].transpose())
         # W = (train_data[i].transpose()).dot(train_data[i])
-    for i in range(25):
+    for i in range(data_size):
         W[i][i] = 0
-    print W
+    # print W
 
+def make_noise():
+    noise_data = copy.deepcopy(data[:use_num])
+    for num in range(use_num):
+        for i in range(data_size):
+            if random.random() < noise_percent:
+                noise_data[num][i] *= -1
+                # if random.randint(1,2) == 1:
+                #     noise_data[i] = -1
+                # else:
+                #     noise_data[i] = 1
+    return noise_data
 
+def erase_noise(noise_data):
+    for num in range(use_num):
+        for num_trial in range(1000):
+            place2change = random.randint(0,24)
+            ans = W[place2change].dot(noise_data[num])
+            # print ans
+            if ans > 0:
+                noise_data[num][place2change] = 1
+            elif ans < 0:
+                noise_data[num][place2change] = -1
+            # if num_trial%15 == 0:
+        # print_dot(noise_data[num])
+        check_same(noise_data[num],num)
+
+def check_same(check_data,num):
+    # print check_data,data[num]
+    if np.array_equal(check_data,data[num]):
+        good_num[num] +=1
+        # print "o"*10
+        # return 1
+    else:
+        print_dot(noise_data[num])
+        print "it should be " + answer[num]
+        # print "x"*10
+        # return 0
 
 
 if __name__ == "__main__":
-    main_data = train_data.reshape((data_num,5,5))
     # for i in range(data_num):
-    #     print_dot(main_data[i])
-    calculate_w(main_data)
+    #     print_dot(data[i])
+    calculate_w()
+
+    global good_num
+    good_num = np.zeros(use_num)
+
+    for i in range(100):
+        noise_data = make_noise()
+        erase_noise(noise_data)
+    print good_num
+    print np.average(good_num)
 
