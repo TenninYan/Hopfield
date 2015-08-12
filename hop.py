@@ -3,10 +3,13 @@ import numpy as np
 import random
 import copy
 
-data_num = 6
+# parameter to chage
 use_num = 6
-data_size = 25
 noise_percent = 0.1
+
+# fixed number
+data_num = 6
+data_size = 25
 
 answer = np.array(["A","C","E","H","I","X"])
 raw_data = np.array(
